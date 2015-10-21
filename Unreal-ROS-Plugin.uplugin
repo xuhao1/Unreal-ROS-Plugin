@@ -1,0 +1,12 @@
+{
+    "FileVersion" : 3,
+    "FriendlyName" : "Unreal-ROS-Plugin",
+
+    "Modules" :
+    [
+        {
+            "Name" : "Unreal_ROS",
+            "Type" : "Runtime"
+        }
+    ]
+}
