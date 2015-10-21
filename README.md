@@ -6,7 +6,7 @@ As for VR techonology uses more widely in robot area.For people who tried of ugl
 As for an example, I will use DJI Onboard SDK on ros for testing.
 ## Framework
 
-As we know, most Unreal applications (the video games) run on Windows platform , XBox , ps4, but ros often running on Embedded Systems like arm linux with Tegra k1. So what I am doing is not running an full roscpp client within Unreal but using roslibjs as my client, all message will be pass through roslibjs,so that we don't need to compile so much binary files.
+As we know, most Unreal applications (the video games) run on Windows platform , XBox , ps4, but ros often running on Embedded Systems like arm linux with Tegra k1. So what I am doing is not running an full roscpp client within Unreal but using rosbridge as my client, all message will be pass through rosbridge via websocket,so that we don't need to compile so much binary files.
 
 ## Roadmap
 
@@ -19,3 +19,20 @@ And then I will pass the control signal from Unreal Engine to ROS.
 
 ### Simulation
 Simulation is the most easy thing for Unreal.
+
+### TODO
+
+#### Connect
+Connect Unreal to ROSBridge.
+
+#### Msg2Unreal
+
+Generate USTRUCT or UCLASS from msg define.
+
+#### Service2Unreal
+
+Generate Function from Service
+
+#### Action2Unreal
+
+Generate Action (with callback) from action definition.
