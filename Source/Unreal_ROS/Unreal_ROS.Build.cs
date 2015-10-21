@@ -9,7 +9,19 @@ namespace UnrealBuildTool.Rules
 			//PrivateIncludePaths.AddRange(
 			//	);
 
-			PrivateDependencyModuleNames.AddRange(
+			//PrivateDependencyModuleNames.AddRange(
+			//	new string[]
+			//	{
+			//		"Core"
+			//	}
+			//	);
+
+			if (UEBuildConfiguration.bBuildEditor == true)
+			{
+				PrivateDependencyModuleNames.Add("UnrealEd");
+			}
+
+        PrivateDependencyModuleNames.AddRange(
 				new string[]
 				{
 					"Core",
@@ -19,10 +31,6 @@ namespace UnrealBuildTool.Rules
 				}
 				);
 
-			if (UEBuildConfiguration.bBuildEditor == true)
-			{
-				PrivateDependencyModuleNames.Add("UnrealEd");
-			}
 
 		}
 	}
