@@ -28,3 +28,5 @@ Intermediate
 *.exe
 *.out
 *.app
+example_ros_workspace/build
+example_ros_workspace/devel
