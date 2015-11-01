@@ -150,6 +150,7 @@ if __name__ == "__main__":
     import sys
     argv = sys.argv
     if (len(argv) < 2):
-        print "Please Enter Dir Path"
+        print "Generate From Data folder"
+        print AnalyseMsgDirectory("data")
     else:
         print AnalyseMsgDirectory(sys.argv[1])

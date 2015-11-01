@@ -30,3 +30,5 @@ Intermediate
 *.app
 example_ros_workspace/build
 example_ros_workspace/devel
+.idea
+*.log
