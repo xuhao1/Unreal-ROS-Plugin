@@ -5,8 +5,10 @@
 {% set TypeName = Struct.name %}
 {% set TypeNameFull = Struct.namefull %}
 {% set Props = Struct.props %}
+{% set FName = "F_"+Struct.GeneratedName %}
+{% set ADName = "U_"+Struct.GeneratedName + "Advertiser" %}
 
-void FROS{{TypeName}}::Unserialization(rapidjson::Value & v)
+void {{FName}}::Unserialization(rapidjson::Value & v)
 {
 /*
 	{% for item in Props %}
@@ -27,7 +29,7 @@ void FROS{{TypeName}}::Unserialization(rapidjson::Value & v)
     */
 }
 
-rapidjson::Value  FROS{{TypeName}}::Serialization(rapidjson::Document & d)
+rapidjson::Value  {{FName}}::Serialization(rapidjson::Document & d)
 {
 	rapidjson::Value s(rapidjson::kObjectType);
 {% for item in Props %}
@@ -49,7 +51,6 @@ rapidjson::Value  FROS{{TypeName}}::Serialization(rapidjson::Document & d)
                 A{{iname}}.PushBack(s{{iname}}, d.GetAllocator());
             {% endif %}
         {% else %}
-
                 A{{iname}}.PushBack(Element.Serialization(d), d.GetAllocator());
         {% endif %}
     }
@@ -65,7 +66,6 @@ rapidjson::Value  FROS{{TypeName}}::Serialization(rapidjson::Document & d)
                 s.AddMember(t{{iname}},s{{iname}}, d.GetAllocator());
             {% endif %}
         {% else %}
-
                 s.AddMember(t{{iname}}, this->{{iname}}.Serialization(d), d.GetAllocator());
         {% endif %}
     {% endif %}
@@ -73,15 +73,15 @@ rapidjson::Value  FROS{{TypeName}}::Serialization(rapidjson::Document & d)
 		return s;
 	}
 
-U{{TypeName}}Advertiser * U{{TypeName}}Advertiser::Create_{{TypeName}}_Advertiser(FString TopicName)
+{{ADName}} * {{ADName}}::Create_{{TypeName}}_Advertiser(FString TopicName)
 {
-	U{{TypeName}}Advertiser * c = NewObject<U{{TypeName}}Advertiser>();
+	{{ADName}} * c = NewObject<{{ADName}}>();
 	c->TopicName = TopicName;
 	c->Advertise();
 	return c;
 }
 
-void U{{TypeName}}Advertiser::Publish(FROS{{TypeName}} Data)
+void {{ADName}}::Publish({{FName}} Data)
 {
     rapidjson::Document d;
     d.SetObject();
@@ -93,7 +93,7 @@ void U{{TypeName}}Advertiser::Publish(FROS{{TypeName}} Data)
     SendJson(d);
 }
 
-U{{TypeName}}Advertiser::U{{TypeName}}Advertiser(const FObjectInitializer& ObjectInitializer)
+{{ADName}}::{{ADName}}(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	this->TypeName = FString("{{TypeNameFull}}");

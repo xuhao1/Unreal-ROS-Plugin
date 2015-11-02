@@ -1,1 +1,1 @@
-bool data
+bool data=2

@@ -43,26 +43,34 @@ import re
 #TODO:
 #Topological Sorting and PackageName
 class MsgField:
-    def __init__(self,name,pkg,bra,type):
+    def __init__(self,name,bra,type,pkg):
         self.name = name
         self.type = type
-
-        if bra == "[]":
-            self.Array = True
-            if self.type in Primitivelist:
-                self.UTypeElement = Primitivelist[self.type]
-                self.UType = "TArray<"+Primitivelist[self.type] + ">"
-            else:
-                self.UTypeElement = "FROS"+self.type
-                self.UType = "TArray<FROS"+self.type + ">"
+        self.Array = (bra == "[]")
+        self.pkg = pkg
+    def Update(self,Msg):
+        if self.type in Primitivelist:
+            self.UType = Primitivelist[self.type]
         else:
-            self.Array = False
-            if self.type in Primitivelist:
-                self.UType = Primitivelist[self.type]
+            if self.pkg+"/"+self.type in UserTypeList:
+                self.UType = "F_"+UserTypeList[self.pkg+"/"+self.type].GeneratedName
+                UserTypeList[self.pkg+"/"+self.type].ReferenceBy.add(Msg)
+                Msg.ReferenceTypes.add(self.pkg+"/"+self.type)
+            elif "std_msgs" + "/" + self.type in UserTypeList:
+                self.UType = "F_"+UserTypeList["std_msgs" + "/" + self.type].GeneratedName
+                UserTypeList["std_msgs" + "/" + self.type].ReferenceBy.add(Msg)
+                Msg.ReferenceTypes.add("std_msgs" + "/" + self.type)
             else:
-                self.UType = "FROS"+self.type
+                self.UType = "F_"+UserTypeList[self.type].GeneratedName
+                UserTypeList[self.type].ReferenceBy.add(Msg)
+                Msg.ReferenceTypes.add(self.type)
+
+        if self.Array:
+            self.UTypeElement = self.UType
+            self.UType = "TArray<" + self.UType + ">"
+
     def __str__(self):
-        return "Field {0} {1} + isArray".format(self.type,self.name,self.Array)
+        return "Field {0} {1} + isArray : {2}".format(self.type,self.name,self.Array)
 
 class MsgType:
     def __init__(self,name,props,pkg):
@@ -70,22 +78,31 @@ class MsgType:
         self.namefull = pkg+"/"+name
         self.props = props
         self.ReferenceTypes = set()
-        for k in self.props:
-            if not k.type in Primitivelist:
-                self.ReferenceTypes.add(k.type)
+        self.ReferenceBy = set()
+        #for k in self.props:
+        #    if not k.type in Primitivelist:
+        #        self.ReferenceTypes.add(k.type)
         UserTypeList[pkg+"/"+self.name] = self
-        if len(self.ReferenceTypes)>0:
-            print self.ReferenceTypes
+        #if len(self.ReferenceTypes)>0:
+        #   print self.ReferenceTypes
+        self.GeneratedName = "{0}_{1}".format(pkg,name)
+
     def __str__(self):
         str = "Type:" + self.name + "\n"
         for k in self.props:
             str += (k.__str__() + "\n")
         return str + ""
+    def Update(self):
+        for k in self.props:
+            k.Update(self)
+        print "Update Type {0} as F_{1}".format(self.namefull,self.GeneratedName)
+        print self
+        #print self.ReferenceTypes
 
 def AnalyseMsgStr(pkg,fstr, name):
-    defs = re.findall("^\s*([\w/]+)(\[?\]?)\s+(\w+)", fstr, re.M)
+    defs = re.findall("^\s*([\w/]+)(\[?\]?)\s+(\w+)\s$", fstr, re.M)
     #print defs
-    MsgList = [MsgField(v,b,k) for k,b,v in defs]
+    MsgList = [MsgField(v,b,k,pkg) for k,b,v in defs]
     return MsgType(name,MsgList,pkg)
 
 
@@ -96,14 +113,43 @@ def AnalyseMsgFile(pkg,file_name):
     return AnalyseMsgStr(pkg,fstr, name)
 
 import os
+def TopologicalSorting(msgs):
+    #for msg in msgs:
+    #    print msg.ReferenceTypes
+    NoReferenced = list()
+    Poped = True
+    #test = set()
+    #test.
+    TotalNum = len(msgs)
+    while Poped:
+        Poped = False
+        for AMsg in msgs:
+            #print "Analyse : " + AMsg.__str__()
+            if len(AMsg.ReferenceTypes) == 0:
+                for k in AMsg.ReferenceBy:
+                    #print "k is \n" + k.__str__()
+                    #print k.ReferenceTypes
+                    k.ReferenceTypes.remove(AMsg.namefull)
+                Poped = True
+                NoReferenced.append(AMsg)
+                msgs.remove(AMsg)
+                break
+
+    print "Success Topoligical Sorting : {0}".format(len(NoReferenced) == TotalNum)
+    return NoReferenced
 
 def AnalyseMsgDirectory(path,p1,p2):
     ros_pkgs = next(os.walk(path))[1]
     print "Analyse {0}".format(ros_pkgs)
     import glob
-    MsgList = []
+    MsgList = set()
     for pkg in ros_pkgs:
-        MsgList.extend(map(lambda path: AnalyseMsgFile(pkg,path), glob.glob(path+'/'+pkg+'/msg'+"/*.msg")))
+        msgs = map(lambda path: AnalyseMsgFile(pkg,path), glob.glob(path+'/'+pkg+'/msg'+"/*.msg"))
+        MsgList = MsgList.union(msgs)
+    for msg in MsgList:
+        msg.Update()
+    MsgListRight =  TopologicalSorting(MsgList)
+    #print MsgList
     fstr = open("FStructTemplate.h").read()
     fstrpp = open("FStructTemplate.cpp").read()
 
@@ -114,14 +160,14 @@ def AnalyseMsgDirectory(path,p1,p2):
 
     rdict = {
         "Header" : "ros_msg_test.h",
-        "StructList" : MsgList,
+        "StructList" : MsgListRight,
         "Primitivelist" : Primitivelist,
         "UserTypeList" : UserTypeList,
         "JsonType" : JsonType
     }
-    #f = open(p1,"w")
+    f = open(p1,"w")
     fpp = open(p2,"w")
-    #f.write(template.render(**rdict))
+    f.write(template.render(**rdict))
     fpp.write(templatepp.render(**rdict))
 
 if __name__ == "__main__":

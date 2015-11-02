@@ -8,7 +8,7 @@
 #include "ros_msg_test.generated.h"
 
 {% for Struct in StructList%}
-struct  FROS{{Struct.name}};
+struct  F_{{Struct.GeneratedName}};
 {% endfor %}
 
 
@@ -16,8 +16,10 @@ struct  FROS{{Struct.name}};
 {% set TypeName = Struct.name %}
 {% set TypeNameFull = Struct.namefull %}
 {% set Props = Struct.props %}
+{% set FName = "F_"+Struct.GeneratedName %}
+{% set ADName = "U_"+Struct.GeneratedName + "Advertiser" %}
 USTRUCT()
-struct FROS{{TypeName}}
+struct {{FName}}
 {
 
 	GENERATED_USTRUCT_BODY()
@@ -36,17 +38,17 @@ struct FROS{{TypeName}}
 
 
 UCLASS()
-class U{{TypeName}}Advertiser : public UAdvertiser
+class {{ADName}} : public UAdvertiser
 {
 
 	GENERATED_UCLASS_BODY()
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Robot OS")
-	static U{{TypeName}}Advertiser * Create_{{TypeName}}_Advertiser(FString TopicName);
+	static {{ADName}} * Create_{{TypeName}}_Advertiser(FString TopicName);
 
 	UFUNCTION(BlueprintCallable, Category = "Robot OS")
-	void Publish(FROS{{TypeName}} Data);
+	void Publish({{FName}} Data);
 };
 
 {% endfor %}
