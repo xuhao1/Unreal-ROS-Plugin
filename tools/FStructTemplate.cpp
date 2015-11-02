@@ -6,8 +6,9 @@
 {% set TypeNameFull = Struct.namefull %}
 {% set Props = Struct.props %}
 
-void F{{TypeName}}::Unserialization(rapidjson::Value & v)
+void FROS{{TypeName}}::Unserialization(rapidjson::Value & v)
 {
+/*
 	{% for item in Props %}
 	{% set iname = item.name %}
     {%if item.type in Primitivelist%}
@@ -23,26 +24,50 @@ void F{{TypeName}}::Unserialization(rapidjson::Value & v)
         this->{{iname}}.Unserialization(v["{{iname}}"]);
     {% endif %}
     {% endfor %}
+    */
 }
 
-rapidjson::Value  F{{TypeName}}::Serialization(rapidjson::Document & d)
+rapidjson::Value  FROS{{TypeName}}::Serialization(rapidjson::Document & d)
 {
 	rapidjson::Value s(rapidjson::kObjectType);
 {% for item in Props %}
     {% set iname = item.name %}
     rapidjson::Value t{{iname}};
     t{{item.name}}.SetString("{{iname}}");
-    {%if item.type in Primitivelist%}
-        {% if (item.type != "string") %}
-            s.AddMember(t{{iname}},this->{{iname}},d.GetAllocator());
+    {% if item.Array %}
+    rapidjson::Value A{{iname}}(rapidjson::kArrayType);
+    for ({{item.UTypeElement}} Element : {{iname}})
+    {
+        {% set etype = item.UTypeElement %}
+        {%if item.type  in Primitivelist%}
+            {% if (item.type != "string") %}
+                A{{iname}}.PushBack(Element,d.GetAllocator());
+            {% else %}
+                rapidjson::Value s{{iname}};
+                std::string fuck_{{iname}} = TCHAR_TO_UTF8( * Element);
+                s{{iname}}.SetString(rapidjson::StringRef(fuck_{{iname}}.c_str()));
+                A{{iname}}.PushBack(s{{iname}}, d.GetAllocator());
+            {% endif %}
         {% else %}
-            rapidjson::Value s{{iname}};
-            char * fuck_{{iname}} = TCHAR_TO_UTF8( * this->{{iname}});
-            s{{iname}}.SetString(rapidjson::StringRef(fuck_{{iname}}));
-            s.AddMember(t{{iname}},s{{iname}}, d.GetAllocator());
+
+                A{{iname}}.PushBack(Element.Serialization(d), d.GetAllocator());
         {% endif %}
+    }
+    s.AddMember(t{{iname}},A{{iname}},d.GetAllocator());
     {% else %}
-            s.AddMember(t{{iname}}, this->{{iname}}.Serialization(d), d.GetAllocator());
+        {%if item.type in Primitivelist%}
+            {% if (item.type != "string") %}
+                s.AddMember(t{{iname}},this->{{iname}},d.GetAllocator());
+            {% else %}
+                rapidjson::Value s{{iname}};
+                std::string fuck_{{iname}} = TCHAR_TO_UTF8( * this->{{iname}});
+                s{{iname}}.SetString(rapidjson::StringRef(fuck_{{iname}}.c_str()));
+                s.AddMember(t{{iname}},s{{iname}}, d.GetAllocator());
+            {% endif %}
+        {% else %}
+
+                s.AddMember(t{{iname}}, this->{{iname}}.Serialization(d), d.GetAllocator());
+        {% endif %}
     {% endif %}
 {% endfor %}
 		return s;
@@ -55,9 +80,19 @@ U{{TypeName}}Advertiser * U{{TypeName}}Advertiser::Create_{{TypeName}}_Advertise
 	c->Advertise();
 	return c;
 }
-void U{{TypeName}}Advertiser::Publish(F{{TypeName}} Data)
+
+void U{{TypeName}}Advertiser::Publish(FROS{{TypeName}} Data)
 {
+    rapidjson::Document d;
+    d.SetObject();
+    d.AddMember("msg",Data.Serialization(d),d.GetAllocator());
+    rapidjson::Value TopicName;
+	TopicName.SetString(rapidjson::StringRef(TCHAR_TO_UTF8(*this->TopicName)));
+	d.AddMember("topic", TopicName, d.GetAllocator());
+    d.AddMember("op","publish",d.GetAllocator());
+    SendJson(d);
 }
+
 U{{TypeName}}Advertiser::U{{TypeName}}Advertiser(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {

@@ -8,7 +8,7 @@
 #include "ros_msg_test.generated.h"
 
 {% for Struct in StructList%}
-struct  F{{Struct.name}};
+struct  FROS{{Struct.name}};
 {% endfor %}
 
 
@@ -17,18 +17,14 @@ struct  F{{Struct.name}};
 {% set TypeNameFull = Struct.namefull %}
 {% set Props = Struct.props %}
 USTRUCT()
-struct F{{TypeName}}
+struct FROS{{TypeName}}
 {
 
 	GENERATED_USTRUCT_BODY()
 
     {% for item in Props:%}
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robot OS")
-	{% if item.type in Primitivelist %}
-	{{Primitivelist[item.type] }} {{ item.name }};
-	{% else %}
-	F{{UserTypeList[item.type].name}} {{ item.name }};
-	{% endif %}
+	{{item.UType }} {{ item.name }};
     {% endfor %}
 
 	rapidjson::Value Serialization(rapidjson::Document & d);
@@ -50,7 +46,7 @@ public:
 	static U{{TypeName}}Advertiser * Create_{{TypeName}}_Advertiser(FString TopicName);
 
 	UFUNCTION(BlueprintCallable, Category = "Robot OS")
-	void Publish(F{{TypeName}} Data);
+	void Publish(FROS{{TypeName}} Data);
 };
 
 {% endfor %}
