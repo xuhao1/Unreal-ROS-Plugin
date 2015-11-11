@@ -41,13 +41,16 @@ UserTypeList = dict()
 import re
 
 #TODO:
-#Topological Sorting and PackageName
+#Support Const
 class MsgField:
-    def __init__(self,name,bra,type,pkg):
+    def __init__(self,name,type,pkg,Array = False,Constant = False,ConstantField = 0):
         self.name = name
         self.type = type
-        self.Array = (bra == "[]")
+        self.Array = Array
         self.pkg = pkg
+        self.Constant = Constant
+        if Constant:
+            self.ConstantField = ConstantField
     def Update(self,Msg):
         if self.type in Primitivelist:
             self.UType = Primitivelist[self.type]
@@ -64,7 +67,8 @@ class MsgField:
                 self.UType = "F_"+UserTypeList[self.type].GeneratedName
                 UserTypeList[self.type].ReferenceBy.add(Msg)
                 Msg.ReferenceTypes.add(self.type)
-
+        if self.Constant:
+            self.name = "CONSTANT_"+self.name
         if self.Array:
             self.UTypeElement = self.UType
             self.UType = "TArray<" + self.UType + ">"
@@ -79,12 +83,7 @@ class MsgType:
         self.props = props
         self.ReferenceTypes = set()
         self.ReferenceBy = set()
-        #for k in self.props:
-        #    if not k.type in Primitivelist:
-        #        self.ReferenceTypes.add(k.type)
         UserTypeList[pkg+"/"+self.name] = self
-        #if len(self.ReferenceTypes)>0:
-        #   print self.ReferenceTypes
         self.GeneratedName = "{0}_{1}".format(pkg,name)
 
     def __str__(self):
@@ -97,12 +96,19 @@ class MsgType:
             k.Update(self)
         print "Update Type {0} as F_{1}".format(self.namefull,self.GeneratedName)
         print self
-        #print self.ReferenceTypes
 
 def AnalyseMsgStr(pkg,fstr, name):
-    defs = re.findall("^\s*([\w/]+)(\[?\]?)\s+(\w+)\s$", fstr, re.M)
-    #print defs
-    MsgList = [MsgField(v,b,k,pkg) for k,b,v in defs]
+    print "Analyse {0}".format(name)
+    defs = re.findall("^\s*([\w/]+)\s+(\w+)\s*(?:#.*)?$", fstr, re.M)
+    defsArray = re.findall("^\s*([\w/]+)\[\]\s+(\w+)\s*(?:#.*)$", fstr, re.M)
+    constantdefs = re.findall("^\s*(?!string)([\w/]+)\s+(\w+)\s*=\s*(\w+)$", fstr, re.M)
+    constantdefstr = re.findall("^\s*(string)\s+(\w+)\s*=\s*(.*?)\s*$", fstr, re.M)
+    print fstr
+    print defs
+    MsgList = [MsgField(v,k,pkg) for k,v in defs]
+    MsgList.extend( [MsgField(v,k,pkg,Array = True) for k,v in defsArray])
+    MsgList.extend([MsgField(v,k,pkg,Constant=True,ConstantField=c) for k,v,c in constantdefs])
+    MsgList.extend([MsgField(v,k,pkg,Constant=True,ConstantField='"'+c+'"') for k,v,c in constantdefstr])
     return MsgType(name,MsgList,pkg)
 
 
@@ -114,21 +120,14 @@ def AnalyseMsgFile(pkg,file_name):
 
 import os
 def TopologicalSorting(msgs):
-    #for msg in msgs:
-    #    print msg.ReferenceTypes
     NoReferenced = list()
     Poped = True
-    #test = set()
-    #test.
     TotalNum = len(msgs)
     while Poped:
         Poped = False
         for AMsg in msgs:
-            #print "Analyse : " + AMsg.__str__()
             if len(AMsg.ReferenceTypes) == 0:
                 for k in AMsg.ReferenceBy:
-                    #print "k is \n" + k.__str__()
-                    #print k.ReferenceTypes
                     k.ReferenceTypes.remove(AMsg.namefull)
                 Poped = True
                 NoReferenced.append(AMsg)

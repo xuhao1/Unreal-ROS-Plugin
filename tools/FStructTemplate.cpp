@@ -10,23 +10,51 @@
 
 void {{FName}}::Unserialization(rapidjson::Value & v)
 {
-/*
+
 	{% for item in Props %}
 	{% set iname = item.name %}
-    {%if item.type in Primitivelist%}
-        {% if (item.type != "string") %}
-    if (v.HasMember("{{iname}}") && v["{{iname}}"].Is{{JsonType[item.type]}}())
-         this->{{iname}} = v["{{iname}}"].Get{{JsonType[item.type]}}();
+	{% if item.Array and (not item.Constant) %}
+        if (v.HasMember("{{iname}}") && v["{{iname}}"].IsArray())
+        {
+            rapidjson::Value & A{{iname}} = v["{{iname}}"];
+            for (rapidjson::SizeType i = 0;i < A{{iname}}.Size();i++)
+            {
+                rapidjson::Value & kv = A{{iname}}[i];
+                {%if item.type in Primitivelist %}
+                    {% if (item.type != "string") %}
+                        if (kv.Is{{JsonType[item.type]}}())
+                        this->{{iname}}.Add(kv.Get{{JsonType[item.type]}}());
+                    {% else %}
+                        if (kv.IsString())
+                            this->{{iname}}.Add(FString( kv.GetString()));
+                    {% endif %}
+                {% else %}
+                    if (kv.IsObject())
+                    {
+                        {{item.UTypeElement}} e;
+                        e.Unserialization(kv);
+                        this->{{iname}}.Add(e);
+                    }
+                {%endif%}
+            }
+        }
+
+	{% elif not item.Constant %}
+        {%if item.type in Primitivelist%}
+            {% if (item.type != "string") %}
+                if (v.HasMember("{{iname}}") && v["{{iname}}"].Is{{JsonType[item.type]}}())
+                this->{{iname}} = v["{{iname}}"].Get{{JsonType[item.type]}}();
+            {% else %}
+                if (v.HasMember("{{iname}}") && v["{{iname}}"].IsString())
+                    this->{{iname}} = FString( v["{{iname}}"].GetString());
+            {% endif %}
         {% else %}
-    if (v.HasMember("{{iname}}") && v["{{iname}}"].IsString())
-        this->{{iname}} = FString( v["{{iname}}"].GetString());
-        {% endif %}
-    {% else %}
-    if (v.HasMember("{{iname}}") && v["{{iname}}"].IsObject())
-        this->{{iname}}.Unserialization(v["{{iname}}"]);
+            if (v.HasMember("{{iname}}") && v["{{iname}}"].IsObject())
+                this->{{iname}}.Unserialization(v["{{iname}}"]);
+    {%endif%}
     {% endif %}
     {% endfor %}
-    */
+
 }
 
 rapidjson::Value  {{FName}}::Serialization(rapidjson::Document & d)
@@ -83,6 +111,10 @@ rapidjson::Value  {{FName}}::Serialization(rapidjson::Document & d)
 
 void {{ADName}}::Publish({{FName}} Data)
 {
+    if (!Advertised)
+    {
+        Advertise();
+    }
     rapidjson::Document d;
     d.SetObject();
     d.AddMember("msg",Data.Serialization(d),d.GetAllocator());
@@ -98,4 +130,31 @@ void {{ADName}}::Publish({{FName}} Data)
 {
 	this->TypeName = FString("{{TypeNameFull}}");
 }
+
+{% set SBName = "U_"+Struct.GeneratedName + "Subscriber" %}
+{{SBName}}::{{SBName}}(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+	this->TypeName = FString("{{TypeNameFull}}");
+}
+void {{SBName}}::ProccessMsg(rapidjson::Value & obj)
+{
+    {{FName}} fdata;
+    fdata.Unserialization(obj);
+    On{{TypeName}}Data.Broadcast(fdata);
+    OnRecieve(fdata);
+}
+
+void {{SBName}}::OnRecieve({{FName}} Data)
+{
+}
+
+{{SBName}} * {{SBName}}::Create_{{TypeName}}_Subscriber(FString _TopicName)
+{
+    {{SBName}} * sub = NewObject<{{SBName}}>();
+	sub->TopicName = _TopicName;
+	sub->Subscribe();
+	return sub;
+}
+
 {% endfor %}
