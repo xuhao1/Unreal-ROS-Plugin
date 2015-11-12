@@ -20,11 +20,6 @@ And then I will pass the control signal from Unreal Engine to ROS.
 ### Simulation
 Simulation is the most easy thing for Unreal.
 
-### TODO
-
-#### Connect
-Connect Unreal to ROSBridge.
-
 #### Msg2Unreal
 
 Generate USTRUCT or UCLASS from msg define.
