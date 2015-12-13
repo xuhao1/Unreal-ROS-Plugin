@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
@@ -32,15 +32,15 @@
             document.getElementById('closed').style.display = 'inline';
         });
         // Create a connection to the rosbridge WebSocket server.
-        ros.connect('ws://192.168.43.112:9090');
+        ros.connect('ws://192.168.52.129:9090');
         // Publishing a Topic
         // ------------------
         // First, we create a Topic object with details of the topic's name and message type.
-        var cmdVel = new ROSLIB.Topic({
+       /* var cmdVel = new ROSLIB.Topic({
             ros: ros,
-            name: '/cmd_vel',
+            name: '/turtle1/cmd_vel',
             messageType: 'geometry_msgs/Twist'
-        });
+        });*/
         // Then we create the payload to be published. The object we pass in to ros.Message matches the
         // fields defined in the geometry_msgs/Twist.msg definition.
         var twist = new ROSLIB.Message({
@@ -56,15 +56,15 @@
             }
         });
         // And finally, publish.
-        cmdVel.publish(twist);
+        //cmdVel.publish(twist);
         //Subscribing to a Topic
         //----------------------
         // Like when publishing a topic, we first create a Topic object with details of the topic's name
         // and message type. Note that we can call publish or subscribe on the same topic object.
         var listener = new ROSLIB.Topic({
             ros: ros,
-            name: '/listener',
-            messageType: 'std_msgs/String'
+            name: '/actor_twist',
+            messageType: 'geometry_msgs/Twist'
         });
         // Then we add a callback to be called every time a message is published on this topic.
         listener.subscribe(function (message) {
