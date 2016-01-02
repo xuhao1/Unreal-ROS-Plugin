@@ -1,9 +1,9 @@
 #include "Unreal_ROS.h"
 #include "CaptureActor.h"
 #include "Engine/TextureRenderTarget2D.h"
-#include "opencv2/opencv.hpp"
+//#include "opencv2/opencv.hpp"
 #include <string>    
-int id = 0;
+static int id_cam = 0;
 ACameraCapturer::ACameraCapturer()
 {
 	//TextureRenderTarget = CreateDefaultSubobject<UTextureRenderTarget2D>(TEXT("Camera"));
@@ -14,9 +14,9 @@ ACameraCapturer::ACameraCapturer()
 }
 void ACameraCapturer::SetCameraID(std::string _cam_id)
 {
-	std::string camera_name = std::to_string(id);
+	std::string camera_name = std::to_string(id_cam);
 	cam_id = camera_name;
-	id ++;
+	id_cam ++;
 }
 ACameraCapturer::~ACameraCapturer()
 {
@@ -31,8 +31,8 @@ void ACameraCapturer::ShowCameraView(std::string CameraID, UTextureRenderTarget2
 		{
 			if (FormatedImageData.Num() != 0)
 			{
-				cv::Mat smallImage(cv::Size(256, 256), CV_8UC4, (unsigned char *)FormatedImageData.GetData());
-				cv::imshow(CameraID.c_str(), smallImage);
+				//cv::Mat smallImage(cv::Size(256, 256), CV_8UC4, (unsigned char *)FormatedImageData.GetData());
+				//cv::imshow(CameraID.c_str(), smallImage);
 			}
 		}
 	}

@@ -54,8 +54,10 @@ public:
 		rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
 		d.Accept(writer);
 		Count = buffer.GetSize();
-		const char * res = buffer.GetString();
-		return (uint8*)res;
+		const char * str = buffer.GetString();
+        uint8 * res = new uint8[Count];
+        memcpy(res,str,sizeof(char)*Count);
+		return res;
 	}
 };
 

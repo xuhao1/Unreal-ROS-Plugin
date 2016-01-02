@@ -1,0 +1,4 @@
+[submodule "ThirdParty/rapidjson"]
+	path = ThirdParty/rapidjson
+	url = https://github.com/miloyip/rapidjson
+	branch = master

@@ -26,7 +26,7 @@ namespace UnrealBuildTool.Rules
             if ((Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32))
             {
                 isLibrarySupported = true;
-
+                PublicIncludePaths.Add(Path.Combine(ThirdPartyPath, "opencv","include"));
                 string PlatformString = (Target.Platform == UnrealTargetPlatform.Win64) ? "x64" : "x86";
                 string LibrariesPath = Path.Combine(ThirdPartyPath, "opencv", PlatformString, "vc12", "lib");
                 foreach (var file in Directory.EnumerateFiles(LibrariesPath, "*.lib", SearchOption.AllDirectories))
@@ -35,11 +35,21 @@ namespace UnrealBuildTool.Rules
                     Debug.Print("Including Lib : " + file);
                 }
             }
+            else if(Target.Platform == UnrealTargetPlatform.Mac)
+            {
+                isLibrarySupported = true;
+                PublicIncludePaths.Add("/usr/local/Cellar/opencv/2.4.12/include");
+                string LibrariesPath = Path.Combine("/usr/local/Cellar/opencv/2.4.12", "lib");
+				foreach (var file in Directory.EnumerateFiles(LibrariesPath, "*.dylib", SearchOption.AllDirectories))
+                {
+                    PublicAdditionalLibraries.Add(file);
+                    Debug.Print("Including Lib : " + file);
+                }
+            }
 
-            PublicIncludePaths.Add(Path.Combine(ThirdPartyPath, "opencv","include"));
 
             Debug.Print("Included Third Part : " + Path.Combine(ThirdPartyPath, "opencv"));
-            return true;
+            return isLibrarySupported;
         }
 
         public Unreal_ROS(TargetInfo Target)
@@ -60,7 +70,7 @@ namespace UnrealBuildTool.Rules
             System.Diagnostics.Debug.Write(rapidjson_path);
             PublicIncludePaths.AddRange(new string[] { rapidjson_path });
             PrivateIncludePaths.AddRange(new string[] { rapidjson_path });
-            LoadOpenCV(Target);
+			LoadOpenCV(Target);
 
             if (UEBuildConfiguration.bBuildEditor == true)
             {

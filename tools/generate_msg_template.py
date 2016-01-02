@@ -174,8 +174,8 @@ if __name__ == "__main__":
     argv = sys.argv
     if (len(argv) < 2):
         print "Generate From Data folder"
-        p1 = "C:\\Users\\hao\\Desktop\\ROS_TEST\\Source\\ROS_TEST\\ros_msg_test.h"
-        p2 = "C:\\Users\\hao\\Desktop\\ROS_TEST\\Source\\ROS_TEST\\ros_msg_test.cpp"
+        p1 = "../Source/Unreal_ROS/Classes/ros_msg_test.h"
+        p2 = "../Source/Unreal_ROS/Private/ros_msg_test.cpp"
 
         print AnalyseMsgDirectory("data",p1,p2)
     else:

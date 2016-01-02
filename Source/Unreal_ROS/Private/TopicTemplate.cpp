@@ -3,6 +3,7 @@
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/document.h"
 #include <mutex>
+#include <string>
 
 FString RosMaster;
 int ThePort;
@@ -31,11 +32,11 @@ bool UAdvertiser::Advertise()
 	d.AddMember("id", "fuck-id", d.GetAllocator());
 	//UE_LOG(LogTemp, Log, TEXT("tname %s"), *this->TopicName);
 	rapidjson::Value RTopicName;
-	std::string temTN = TCHAR_TO_UTF8(*this->TopicName);
+    std::string temTN = std::string(TCHAR_TO_UTF8(*this->TopicName));
 	RTopicName.SetString(rapidjson::StringRef(temTN.c_str()));
 	d.AddMember("topic", RTopicName, d.GetAllocator());
 	rapidjson::Value TypeName;
-	std::string temTY = TCHAR_TO_UTF8(*this->TypeName);
+    std::string temTY = std::string(TCHAR_TO_UTF8(*this->TypeName));
 	TypeName.SetString(rapidjson::StringRef(temTY.c_str()));
 	d.AddMember("type", TypeName, d.GetAllocator());
 	return (Advertised = SendJson(d));
@@ -46,7 +47,9 @@ bool UAdvertiser::SendJson(rapidjson::Document &d)
 	int len = -1;
 	int sent = -1;
 	auto str = TCPClient::RapidJson2Buffer(d, len);
+ 
 	sock->Send(str, len, sent);
+    delete str;
 	if (len != sent)
 	{
 		return false;
@@ -71,11 +74,12 @@ void USubscriber::Subscribe()
 	d.AddMember("op", "subscribe", d.GetAllocator());
 	d.AddMember("id", "fuck-id", d.GetAllocator());
 	rapidjson::Value RTopicName;
-	std::string temTN = TCHAR_TO_UTF8(*this->TopicName);
-	RTopicName.SetString(rapidjson::StringRef(temTN.c_str()));
+    std::string temTN = std::string(TCHAR_TO_UTF8(*this->TopicName));
+	//std::string temTN = "";
+    RTopicName.SetString(rapidjson::StringRef(temTN.c_str()));
 	d.AddMember("topic", RTopicName, d.GetAllocator());
 	rapidjson::Value TypeName;
-	std::string temTY = TCHAR_TO_UTF8(*this->TypeName);
+    std::string temTY = std::string(TCHAR_TO_UTF8(*this->TypeName));
 	TypeName.SetString(rapidjson::StringRef(temTY.c_str()));
 	d.AddMember("type", TypeName, d.GetAllocator());
 	if (this->sock == nullptr)
@@ -115,6 +119,7 @@ bool USubscriber::SendJson(rapidjson::Document &d)
 	int sent = -1;
 	auto str = TCPClient::RapidJson2Buffer(d, len);
 	sock->Send(str, len, sent);
+    delete str;
 	if (len != sent)
 	{
 		return false;
