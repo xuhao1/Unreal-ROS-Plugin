@@ -34,3 +34,4 @@ example_ros_workspace/devel
 *.log
 tools/data
 tools/data2
+Thirdparty/opencv

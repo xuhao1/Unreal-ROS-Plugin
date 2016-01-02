@@ -5,8 +5,8 @@ using System.Diagnostics;
 
 namespace UnrealBuildTool.Rules
 {
-	public class Unreal_ROS : ModuleRules
-	{
+    public class Unreal_ROS : ModuleRules
+    {
         private string ModulePath
         {
             get { return Path.GetDirectoryName(RulesCompiler.GetModuleFilename(this.GetType().Name)); }
@@ -19,41 +19,65 @@ namespace UnrealBuildTool.Rules
                 return Path.GetFullPath(Path.Combine(ModulePath, "../../ThirdParty/"));
             }
         }
+        public bool LoadOpenCV(TargetInfo Target)
+        {
+            bool isLibrarySupported = false;
+
+            if ((Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32))
+            {
+                isLibrarySupported = true;
+
+                string PlatformString = (Target.Platform == UnrealTargetPlatform.Win64) ? "x64" : "x86";
+                string LibrariesPath = Path.Combine(ThirdPartyPath, "opencv", PlatformString, "vc12", "lib");
+                foreach (var file in Directory.EnumerateFiles(LibrariesPath, "*.lib", SearchOption.AllDirectories))
+                {
+                    PublicAdditionalLibraries.Add(file);
+                    Debug.Print("Including Lib : " + file);
+                }
+            }
+
+            PublicIncludePaths.Add(Path.Combine(ThirdPartyPath, "opencv","include"));
+
+            Debug.Print("Included Third Part : " + Path.Combine(ThirdPartyPath, "opencv"));
+            return true;
+        }
+
         public Unreal_ROS(TargetInfo Target)
-		{
+        {
             //PrivateIncludePaths.AddRange(
             //	);
 
             PrivateDependencyModuleNames.AddRange(
-            	new string[]
-            	{
-            		"Core",
+                new string[]
+                {
+                    "Core",
                     "Networking",
                     "Sockets"
                 }
-            	);
+                );
             string rapidjson_path = Path.Combine(ThirdPartyPath, "rapidjson", "include");
 
             System.Diagnostics.Debug.Write(rapidjson_path);
             PublicIncludePaths.AddRange(new string[] { rapidjson_path });
             PrivateIncludePaths.AddRange(new string[] { rapidjson_path });
+            LoadOpenCV(Target);
 
             if (UEBuildConfiguration.bBuildEditor == true)
-			{
-				PrivateDependencyModuleNames.Add("UnrealEd");
-			}
+            {
+                PrivateDependencyModuleNames.Add("UnrealEd");
+            }
 
-        PrivateDependencyModuleNames.AddRange(
-				new string[]
-				{
-					"Core",
-					"CoreUObject",
-					"Engine",
-					"InputCore"
-				}
-				);
+            PrivateDependencyModuleNames.AddRange(
+                    new string[]
+                    {
+                    "Core",
+                    "CoreUObject",
+                    "Engine",
+                    "InputCore"
+                    }
+                    );
 
 
-		}
-	}
+        }
+    }
 }

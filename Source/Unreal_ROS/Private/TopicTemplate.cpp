@@ -1,6 +1,5 @@
 #include "Unreal_ROS.h"
 #include "TopicTemplate.h"
-#include "ROS_Client.h"
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/document.h"
 #include <mutex>

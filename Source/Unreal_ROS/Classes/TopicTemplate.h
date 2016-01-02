@@ -64,7 +64,6 @@ class UAdvertiser : public UObject
 {
 
 	GENERATED_UCLASS_BODY()
-
 public:
 	UFUNCTION(BlueprintCallable, Category = "Robot OS")
 		static void InitRos(FString _RosMaster, int32 _ThePort);

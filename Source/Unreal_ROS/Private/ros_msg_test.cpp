@@ -9371,7 +9371,8 @@ void U_geometry_msgs_PoseAdvertiser::Publish(F_geometry_msgs_Pose Data)
     d.SetObject();
     d.AddMember("msg",Data.Serialization(d),d.GetAllocator());
     rapidjson::Value TopicName;
-	TopicName.SetString(rapidjson::StringRef(TCHAR_TO_UTF8(*this->TopicName)));
+	auto str = rapidjson::StringRef(TCHAR_TO_UTF8(*this->TopicName));
+	TopicName.SetString(str);
 	d.AddMember("topic", TopicName, d.GetAllocator());
     d.AddMember("op","publish",d.GetAllocator());
     SendJson(d);
