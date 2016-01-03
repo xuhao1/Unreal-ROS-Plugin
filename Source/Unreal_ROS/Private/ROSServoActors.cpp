@@ -33,5 +33,51 @@ void UROSMotorConstrainComponent::TickComponent(float DeltaTime, enum ELevelTick
 	}
 }
 
+UROSPoseDriver::UROSPoseDriver(const FObjectInitializer& ObjectInitializer)
+: Super(ObjectInitializer)
+{
+    bWantsBeginPlay = true;
+    PrimaryComponentTick.bCanEverTick = true;
+ }
 
+void UROSPoseDriver::BeginPlay()
+{
+    root = GetOwner()->GetRootPrimitiveComponent();
+    
+    if (root == nullptr)
+    {
+        UE_LOG(LogTemp, Log, TEXT("NO root!!"));
+    }
+    pose_ros.orientation.w = 1;
+}
 
+void UROSPoseDriver::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction * ThisTickFunction)
+{
+    if (root != nullptr )
+    {
+        if (PoseSub == nullptr)
+        {
+            PoseSub =  U_geometry_msgs_PoseSubscriber::Create_Pose_Subscriber(SubscribeTopic);
+            PoseSub->OnPoseData.AddDynamic(this,&UROSPoseDriver::OnPoseData);
+        }
+        
+        FVector loc;
+        loc.X = pose_ros.position.x;
+        loc.Y = pose_ros.position.y;
+        if (UsingNED)
+            loc.Z = - pose_ros.position.z;
+        FQuat rot(
+                  pose_ros.orientation.x,
+                  pose_ros.orientation.y,
+                  pose_ros.orientation.z,
+                  pose_ros.orientation.w
+        );
+        FTransform trans(rot,loc);
+        root->GetBodyInstance()->SetBodyTransform(trans,true);
+    }
+}
+void UROSPoseDriver::OnPoseData(F_geometry_msgs_Pose pose_ros)
+{
+    this->pose_ros = pose_ros;
+    UE_LOG(LogTemp,Log,TEXT("new pose come"));
+}
