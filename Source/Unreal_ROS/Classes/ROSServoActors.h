@@ -5,6 +5,7 @@
 #include "ros_msg_test.h"
 #include "ROSServoActors.generated.h"
 
+/*
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UROSMotorConstrainComponent : public USceneComponent
 {
@@ -20,7 +21,7 @@ public:
 	float speed = 0;
 
 };
-
+*/
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UROSPoseDriver : public USceneComponent
@@ -47,15 +48,21 @@ public:
     bool UsingNED = false;
     
     UFUNCTION()
-    void OnPoseData(F_geometry_msgs_Pose pose_ros);
+    void OnPoseData(F_nav_msgs_Odometry odom);
 
-    U_geometry_msgs_PoseSubscriber * PoseSub = nullptr;
+    U_nav_msgs_OdometrySubscriber * PoseSub = nullptr;
     
-    F_geometry_msgs_Pose pose_ros;
+    FBodyInstance * bd = nullptr;
+    FCalculateCustomPhysics * delegate = nullptr;
+	FVector loc,vel,AngularVelocity;
+	FQuat rot;
+	int count_pawn = 0;
+	float d_time = 0;
+    F_nav_msgs_Odometry odom;
     ~UROSPoseDriver()
     {
         if (PoseSub!=nullptr)
             PoseSub = nullptr;
     }
-
+	int max_seq = 0;
 };

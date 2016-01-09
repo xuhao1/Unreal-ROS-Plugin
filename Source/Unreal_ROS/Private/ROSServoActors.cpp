@@ -1,5 +1,6 @@
 #include "Unreal_ROS.h"
 #include "ROSServoActors.h"
+/*
 
 UROSMotorConstrainComponent::UROSMotorConstrainComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -32,7 +33,7 @@ void UROSMotorConstrainComponent::TickComponent(float DeltaTime, enum ELevelTick
 		rotor->GetBodyInstance()->SetAngularVelocity(speec,false);
 	}
 }
-
+*/
 UROSPoseDriver::UROSPoseDriver(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer)
 {
@@ -47,37 +48,61 @@ void UROSPoseDriver::BeginPlay()
     if (root == nullptr)
     {
         UE_LOG(LogTemp, Log, TEXT("NO root!!"));
+        return;
     }
-    pose_ros.orientation.w = 1;
+    root->SetSimulatePhysics(true);
+	root->SetEnableGravity(false);
+	bd = root->GetBodyInstance();
+	rot.W = 1;
+	delegate = new FCalculateCustomPhysics;
+	delegate->BindLambda([&](float t, FBodyInstance* f){
+			if (count_pawn == 0)
+			{
+			//f->SetLinearVelocity(vel, false);
+			//f->SetAngularVelocity(AngularVelocity, false);
+			f->SetBodyTransform(
+				FTransform(rot,loc)
+				, true
+				);
+			}
+			count_pawn++;
+			d_time = t;
+			});
 }
 
 void UROSPoseDriver::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction * ThisTickFunction)
 {
-    if (root != nullptr )
-    {
-        if (PoseSub == nullptr)
-        {
-            PoseSub =  U_geometry_msgs_PoseSubscriber::Create_Pose_Subscriber(SubscribeTopic);
-            PoseSub->OnPoseData.AddDynamic(this,&UROSPoseDriver::OnPoseData);
-        }
-        
-        FVector loc;
-        loc.X = pose_ros.position.x;
-        loc.Y = pose_ros.position.y;
-        if (UsingNED)
-            loc.Z = - pose_ros.position.z;
-        FQuat rot(
-                  pose_ros.orientation.x,
-                  pose_ros.orientation.y,
-                  pose_ros.orientation.z,
-                  pose_ros.orientation.w
-        );
-        FTransform trans(rot,loc);
-        root->GetBodyInstance()->SetBodyTransform(trans,true);
-    }
+	count_pawn = 0;
+	if (root != nullptr )
+	{
+		if (PoseSub == nullptr)
+		{
+			PoseSub =  U_nav_msgs_OdometrySubscriber::Create_Odometry_Subscriber(SubscribeTopic);
+			PoseSub->OnOdometryData.AddDynamic(this,&UROSPoseDriver::OnPoseData);
+		}
+		bd->AddCustomPhysics(*delegate);
+	}
 }
-void UROSPoseDriver::OnPoseData(F_geometry_msgs_Pose pose_ros)
+void UROSPoseDriver::OnPoseData(F_nav_msgs_Odometry odom)
 {
-    this->pose_ros = pose_ros;
-    UE_LOG(LogTemp,Log,TEXT("new pose come"));
+	if (odom.header.seq < max_seq)
+		return;
+
+	max_seq = odom.header.seq;
+	this->odom = odom;
+	F_geometry_msgs_Pose & pose_ros = odom.pose.pose;
+	loc.X = pose_ros.position.x * 100;
+	loc.Y = pose_ros.position.y * 100;
+	if (UsingNED)
+		loc.Z = - pose_ros.position.z * 100;
+    UE_LOG(LogTemp,Log,TEXT("%d %f %f %f - quat :%f %f %f %f"),max_seq,loc.X,loc.Y,loc.Z,pose_ros.orientation.x,
+           pose_ros.orientation.y,
+           pose_ros.orientation.z,
+           pose_ros.orientation.w);
+	rot = FQuat(
+			pose_ros.orientation.x,
+			pose_ros.orientation.y,
+			pose_ros.orientation.z,
+			pose_ros.orientation.w
+			);
 }
