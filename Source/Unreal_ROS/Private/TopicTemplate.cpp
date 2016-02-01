@@ -85,32 +85,56 @@ void USubscriber::Subscribe()
 	if (this->sock == nullptr)
 	{
 		this->sock = TCPClient::InitNetwork(RosMaster, ThePort);
-		Receiver = new FUdpSocketReceiver(this->sock, 0, TEXT("nothing"));
-		FOnSocketDataReceived & del = Receiver->OnDataReceived();
-		del.BindLambda([&](FArrayReaderPtr ptr,FIPv4Endpoint ip) {
-			memcpy(Data, ptr->GetData(), sizeof(char)*ptr->Num());
-			FString fstr = UTF8_TO_TCHAR(Data);
-			rapidjson::Document d;
-			d.Parse((char *)Data);
-			memset(Data, 0, sizeof(char)*ptr->Num());
-
-			if (d.HasParseError())
-			{
-				UE_LOG(LogTemp, Log, TEXT("Wrong data"));
-			}
-			else
-			{
-				if (d.HasMember("op") && d["op"].GetType() == rapidjson::kStringType
-					&& std::string(d["op"].GetString()) == "publish"
-					&&d.HasMember("msg") && d["msg"].GetType() == rapidjson::kObjectType
-					)
+		th = new std::thread([&]{
+			int tick = 0;
+			while(Running) {
+				if (!this->Subscring && tick ++ %10 == 0 )
 				{
-					ProccessMsg(d["msg"]);
+					if (!(this->Subscring = this->SendJson(d)))
+					{
+						UE_LOG(LogTemp, Log, TEXT("Failed on Subscribe"));
+					}
+					else
+					{
+						UE_LOG(LogTemp, Log, TEXT("Success on Subscribe"));
+					}
+				}
+				uint32 Size;
+				if (this->sock->HasPendingData(Size))
+				{
+                    int32 Read = 0;
+					sock->Recv(Data, Size, Read);
+					FString fstr = UTF8_TO_TCHAR(Data);
+					//UE_LOG(LogTemp,Log,TEXT("receive data :%s"),*fstr);
+					rapidjson::Document d;
+					d.Parse((char *)Data);
+					memset(Data, 0, sizeof(char)*Size);
+					if (d.HasParseError())
+					{
+						UE_LOG(LogTemp, Log, TEXT("Wrong data"));
+					}
+					else
+					{
+						if (d.HasMember("op") && d["op"].GetType() == rapidjson::kStringType
+							&& std::string(d["op"].GetString()) == "publish"
+							&&d.HasMember("msg") && d["msg"].GetType() == rapidjson::kObjectType
+							)
+						{
+							ProccessMsg(d["msg"]);
+						}
+					}
 				}
 			}
 		});
 	}
-	this->Subscring = this->SendJson(d);
+	if (!(this->Subscring = this->SendJson(d)))
+	{
+		UE_LOG(LogTemp, Log, TEXT("Failed on Subscribe"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("Success on Subscribe"));
+	}
 }
 
 bool USubscriber::SendJson(rapidjson::Document &d)
@@ -119,7 +143,7 @@ bool USubscriber::SendJson(rapidjson::Document &d)
 	int sent = -1;
 	auto str = TCPClient::RapidJson2Buffer(d, len);
 	sock->Send(str, len, sent);
-    delete str;
+	delete str;
 	if (len != sent)
 	{
 		return false;

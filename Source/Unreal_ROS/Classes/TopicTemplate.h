@@ -43,7 +43,7 @@ public:
 		addr->SetPort(ThePort);
 		UE_LOG(LogTemp, Log, TEXT("Try to connect remote"));
 		FSocket * sock = nullptr;
-		sock = FUdpSocketBuilder(TEXT("test ros udp"))
+		sock = FTcpSocketBuilder(TEXT("test ros TCP"))
 			.AsReusable().AsNonBlocking();
 		sock->Connect(*addr);
 		return sock;
@@ -113,8 +113,8 @@ public:
 	~USubscriber()
 	{
 		Running = false;
-		if (Receiver)
-			Receiver->Stop();
+		//if (Receiver)
+		//	Receiver->Stop();
 		if (th != nullptr)
 		{
 			th->join();

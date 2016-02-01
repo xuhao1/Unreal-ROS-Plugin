@@ -34,8 +34,10 @@ void UPhysicsPublisherComponent::BeginPlay()
 		pose_ros.orientation.y = trans.GetRotation().Y;
 		pose_ros.orientation.z = trans.GetRotation().Z;
 
+        
 		FVector Vel = f->GetUnrealWorldVelocity();
-		FVector AngularVel = f->GetUnrealWorldAngularVelocity();
+		
+        FVector AngularVel = f->GetUnrealWorldAngularVelocity();
 		twist_ros.linear.x = Vel.X;
 		twist_ros.linear.y = Vel.Y;
 		twist_ros.linear.z = Vel.Z;
