@@ -70,7 +70,7 @@ namespace UnrealBuildTool.Rules
             System.Diagnostics.Debug.Write(rapidjson_path);
             PublicIncludePaths.AddRange(new string[] { rapidjson_path });
             PrivateIncludePaths.AddRange(new string[] { rapidjson_path });
-			LoadOpenCV(Target);
+			//LoadOpenCV(Target);
 
             if (UEBuildConfiguration.bBuildEditor == true)
             {

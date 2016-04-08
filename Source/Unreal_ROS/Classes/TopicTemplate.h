@@ -35,11 +35,9 @@ class TCPClient
 public:
 	static FSocket * InitNetwork(FString _RosMaster, int ThePort)
 	{
-		FIPv4Address ip;
-		FIPv4Address::Parse(_RosMaster, ip);
-
 		auto addr = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
-		addr->SetIp(ip.GetValue());
+		bool isVaild = false;
+		addr->SetIp(*_RosMaster,isVaild);
 		addr->SetPort(ThePort);
 		UE_LOG(LogTemp, Log, TEXT("Try to connect remote"));
 		FSocket * sock = nullptr;

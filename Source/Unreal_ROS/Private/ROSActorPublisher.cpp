@@ -26,9 +26,9 @@ void UPhysicsPublisherComponent::BeginPlay()
 	{
 		PhysTotalTime += t;
 		FTransform trans = f->GetUnrealWorldTransform(false);
-		pose_ros.position.x = trans.GetLocation().X;
-		pose_ros.position.y = trans.GetLocation().Y;
-		pose_ros.position.z = trans.GetLocation().Z;
+		pose_ros.position.x = trans.GetLocation().X / 100;
+		pose_ros.position.y = trans.GetLocation().Y / 100;
+		pose_ros.position.z = - trans.GetLocation().Z / 100;
 		pose_ros.orientation.w = trans.GetRotation().W;
 		pose_ros.orientation.x = trans.GetRotation().X;
 		pose_ros.orientation.y = trans.GetRotation().Y;
@@ -36,14 +36,13 @@ void UPhysicsPublisherComponent::BeginPlay()
 
 		FVector Vel = f->GetUnrealWorldVelocity();
 		FVector AngularVel = f->GetUnrealWorldAngularVelocity();
-		twist_ros.linear.x = Vel.X;
-		twist_ros.linear.y = Vel.Y;
-		twist_ros.linear.z = Vel.Z;
-		twist_ros.angular.x = AngularVel.X;
-		twist_ros.angular.y = AngularVel.Y;
-		twist_ros.angular.z = AngularVel.Z;
-
-		//physx::PxRigidDynamic* dynamic = f->GetPxRigidDynamic();
+		twist_ros.linear.x = Vel.X /100;
+		twist_ros.linear.y = Vel.Y /100;
+		twist_ros.linear.z = - Vel.Z/100;
+		AngularVel = trans.GetRotation().UnrotateVector(AngularVel);
+		twist_ros.angular.x = - AngularVel.X;
+		twist_ros.angular.y = - AngularVel.Y;
+		twist_ros.angular.z = - AngularVel.Z;
 
 		float DelaT = 1.0 / (float)UpdateFrequency;
 		if (PhysTotalTime - LastReported > DelaT)

@@ -7,6 +7,20 @@
 
 FString RosMaster;
 int ThePort;
+struct ipvalue
+{
+#if PLATFORM_LITTLE_ENDIAN
+#if _MSC_VER
+	uint8 D, C, B, A;
+#else
+	uint8 D GCC_ALIGN(4);
+	uint8 C, B, A;
+#endif
+#else
+	uint8 A, B, C, D;
+#endif
+};
+
 UAdvertiser::UAdvertiser(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
@@ -86,8 +100,7 @@ void USubscriber::Subscribe()
 	{
 		this->sock = TCPClient::InitNetwork(RosMaster, ThePort);
 		Receiver = new FUdpSocketReceiver(this->sock, 0, TEXT("nothing"));
-		FOnSocketDataReceived & del = Receiver->OnDataReceived();
-		del.BindLambda([&](FArrayReaderPtr ptr,FIPv4Endpoint ip) {
+		Receiver->OnDataReceived().BindLambda([&](FArrayReaderPtr ptr,FIPv4Endpoint ip) {
 			memcpy(Data, ptr->GetData(), sizeof(char)*ptr->Num());
 			FString fstr = UTF8_TO_TCHAR(Data);
 			rapidjson::Document d;
