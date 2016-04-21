@@ -1,24 +1,23 @@
 # Unreal-ROS-Plugin
-An ROS plugin for unreal engine which let us work robot os with unreal engine.
+An ROS plugin for unreal engine which let us work with ROS and Unreal Engine.
 
-As for VR techonology uses more widely in robot area.For people who tried of ugly UI of somelike opengl or Qt.3D UI with Unreal maybe the most fancy we could obtain, so I am trying to develop a tool which can works unreal with ros so that we can easy develop VR application for robot.
+We are trying to develop a tool which can work with Unreal Engine and ROS so we can more easily devleop a VR application which will be better than OpenGL or QT3D. 
 
-As for an example, I will use DJI Onboard SDK on ros for testing.
+For an example, I will use DJI Onboard SDK with ROS for testing.
 ## Framework
 
-As we know, most Unreal applications (the video games) run on Windows platform , XBox , ps4, but ros often running on Embedded Systems like arm linux with Tegra k1. So what I am doing is not running an full roscpp client within Unreal but using rosbridge as my client, all message will be pass through rosbridge via websocket,so that we don't need to compile so much binary files.
+Most Unreal applications (the video games) run on fast desktop or console systems, but ROS often runs on embedded systems like ARM Linux with the NVIDIA Tegra TK1. To get around this we use full roscpp client within Unreal, but rosbridge as the client. All the messages will pass through rosbridge via websocket to reduce the need to compile binaries. 
 
 ## Roadmap
 
 ### Display
-First of all, I will develop a controller which pass odometry message as a controller for Unreal,and also parameter from ros to switch models
+First we will develop a controller which will pass odometry messages as to control for Unreal, and also a parameter from ROS to switch models.
 
 ### Control
-Beyond control system is developing, an import thing is to develop mechanism to synchronize.
-And then I will pass the control signal from Unreal Engine to ROS.
+We will develop a method to synchronize and then pass the control signal from Unreal to ROS. 
 
 ### Simulation
-Simulation is the most easy thing for Unreal.
+Simulation is the easiest thing for Unreal.
 
 #### Msg2Unreal
 
