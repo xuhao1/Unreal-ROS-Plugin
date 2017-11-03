@@ -3,6 +3,7 @@
 #include "Unreal_ROS.h"
 #include "TopicTemplate.h"
 #include "ros_msg_test.h"
+#include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "ROSServoActors.generated.h"
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
